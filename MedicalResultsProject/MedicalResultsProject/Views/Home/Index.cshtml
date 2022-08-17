@@ -1,0 +1,93 @@
+﻿@model MedicalResultsProject.Models.DefaultAnalysis
+
+@{
+    ViewBag.Title = "Home Page";
+    //Создаем SelectedList чтобы заполнить DropDownList ниже
+    List<SelectListItem> listItems = new List<SelectListItem>();
+    //Ищем в БД типы анализов
+    MedicalResultsProject.Models.MyDbContext db = new MedicalResultsProject.Models.MyDbContext();
+    MedicalResultsProject.Models.User user = db.Users.Where(u => u.Username == User.Identity.Name).FirstOrDefault();
+    List<MedicalResultsProject.Models.DefaultAnalysis> defaultAnalysis = db.DefaultAnalyzes.Where(u=> u.isHidden==false && (u.UserId==0 || u.UserId==user.Id)).ToList();
+    //Добавляем в список типы анализов
+    foreach (var value in defaultAnalysis)
+    {
+        listItems.Add(new SelectListItem
+        {
+            Text = value.AnalysisName,
+            Value = value.Id.ToString()
+        });
+    }
+}
+
+<!--Атрибуты HTML отвечают за обработку модели формы-->
+<!--Некоторые данные берутся из ViewBag-->
+
+<div class="container mt-3">
+    <div class="row">
+        <div class="col">
+            <h3>Добро пожаловать, @User.Identity.Name!</h3>
+        </div>
+        <div class="col"></div>
+        <div class="col">
+            <!-- Button trigger modal -->
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">Добавить новый анализ</button>
+
+            <!-- Modal -->
+            <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLabel">Выберите как добавить анализ</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        @using (Html.BeginForm())
+                        {
+                            @Html.AntiForgeryToken()
+                            <div class="modal-body">
+                                @Html.DropDownListFor(model => model.Id, listItems, new { @class = "btn btn-default dropdown-toggle" })
+                                <input type="submit" value="Выбрать" class="btn btn-primary" />
+                                <a href="../Home/AddAnalysis" class="btn btn-primary">Добавить анализ вручную</a>
+                                <!--<button type="button" class="btn btn-primary">Добавить анализ вручную</button>-->
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <hr />
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <h4>Название анализа:</h4>
+        </div>
+        <div class="col">
+            <h4>Дата анализа:</h4>
+        </div>
+        <div class="col">
+            <h4>Элементы управления:</h4>
+        </div>
+    </div>
+</div>
+<hr />
+<!--Перебираем все анализы пользователя и выводим их в список-->
+@foreach (var analisis in ViewBag.User.Analyzes)
+{
+    <div class="container">
+        <div class="row">
+            <div class="col">
+                <h5>@analisis.AnalysisName</h5>
+            </div>
+            <div class="col">
+                <h5>@analisis.Date</h5>
+            </div>
+            <div class="col">
+                <a href="../Home/InformationAnalysis?id=@analisis.Id" class="btn btn-primary">Информация</a>
+                <a href="../Home/DeleteAnalysis?id=@analisis.Id" class="btn btn-danger">Удалить</a>
+            </div>
+        </div>
+    </div>
+    <hr />
+}

@@ -1,0 +1,78 @@
+﻿@model MedicalResultsProject.Models.Analysis
+
+@{
+    ViewBag.Title = "AddDefaultAnalysis";
+}
+
+<h2>Добавление нового анализа</h2>
+<!--Атрибуты HTML отвечают за обработку модели формы-->
+<!--Некоторые данные берутся из ViewBag-->
+
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        <h4>Заполните информацию об анализе:</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        <div class="form-group">
+            <label>Название анализа:</label>
+            <div class="col-md-10">
+                <h2>@ViewBag.AnalysisName</h2>
+                <div hidden>
+                    @Html.EditorFor(model => model.AnalysisName, new { htmlAttributes = new { @class = "form-control", @value = ViewBag.AnalysisName } })
+                    @Html.ValidationMessageFor(model => model.AnalysisName, "", new { @class = "text-danger" })
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Дата анализа:</label>
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Date, new { htmlAttributes = new { @class = "form-control", @value = ViewBag.Date } })
+                @Html.ValidationMessageFor(model => model.Date, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <hr />
+        @for (int i = 0; i < ViewBag.AnalysisTypes.Count; i++)
+        {
+            <div id="block">
+                <div class="form-group">
+                    <div class="row g-4 mt-1">
+                        <div class="col-auto">
+                            <label>Параметр @(i+1):</label>
+                        </div>
+                        <div class="col-auto">
+                            @Html.EditorFor(model => model.ValuesOfAnalyzes[i].Value, new { htmlAttributes = new { @class = "form-control" } })
+                            @Html.ValidationMessageFor(model => model.ValuesOfAnalyzes[i].Value, "", new { @class = "text-danger" })
+                            <div hidden>@Html.EditorFor(model => model.ValuesOfAnalyzes[i].TypeId, new { htmlAttributes = new { @class = "form-control" } })</div>
+                        </div>
+                        <div class="col-auto">@ViewBag.AnalysisTypes[i].TypeName</div>
+                        <div class="col-auto"><a href="../Home/AddType" class="btn btn-primary">Добавить новый тип</a></div>
+                    </div>
+                </div>
+            </div>
+        }
+        <hr />
+        <div class="form-group mb-3">
+            <label>Диагноз:</label>
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Diagnosis, new { htmlAttributes = new { @class = "form-control", @value = ViewBag.Diagnosis } })
+                @Html.ValidationMessageFor(model => model.Diagnosis, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <div class="row g-2">
+                    <div class="col-auto">
+                        <input type="submit" value="Сохранить" class="btn btn-primary" />
+                    </div>
+                    <div class="col-auto">
+                        <a href="../" class="btn btn-danger">Отмена</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}

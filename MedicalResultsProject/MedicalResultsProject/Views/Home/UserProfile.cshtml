@@ -1,0 +1,51 @@
+﻿
+@{
+    ViewBag.Title = "UserProfile";
+}
+
+<h2>Профиль пользователя</h2>
+
+<div class="row g-1">
+    <div class="col-auto">
+        <table class="table table-primary">
+            <tr>
+                <td>Email:</td>
+                <td>@ViewBag.User.Email</td>
+                <td><a href="../Account/EditGeneralInfo" class="btn btn-primary">Изменить</a></td>
+            </tr>
+            <tr>
+                <td>Пароль:</td>
+                <td>*************</td>
+                <td><a href="../Account/EditPassword" class="btn btn-primary">Изменить</a></td>
+            </tr>
+            <tr>
+                <td>Имя:</td>
+                <td>@ViewBag.User.Name</td>
+                <td><a href="../Account/EditGeneralInfo" class="btn btn-primary">Изменить</a></td>
+            </tr>
+            <tr>
+                <td>Фамилия:</td>
+                <td>@ViewBag.User.Surname</td>
+                <td><a href="../Account/EditGeneralInfo" class="btn btn-primary">Изменить</a></td>
+            </tr>
+            <tr>
+                <td>Возраст:</td>
+                <td>@ViewBag.User.Age</td>
+                <td><a href="../Account/EditGeneralInfo" class="btn btn-primary">Изменить</a></td>
+            </tr>
+            <tr>
+                <td>Рост:</td>
+                <td>@ViewBag.User.Height</td>
+                <td><a href="../Account/EditGeneralInfo" class="btn btn-primary">Изменить</a></td>
+            </tr>
+            <tr>
+                <td>Вес:</td>
+                <td>@ViewBag.User.Weight</td>
+                <td><a href="../Account/EditGeneralInfo" class="btn btn-primary">Изменить</a></td>
+            </tr>
+        </table>
+    </div>
+</div>
+<div class="row g-1">
+    <div class="col-auto"><a href="../Home" class="btn btn-primary">Назад</a></div>
+</div>

@@ -1,0 +1,52 @@
+﻿
+@{
+    ViewBag.Title = "InformationAnalysis";
+}
+
+<h2>Информация об анализе</h2>
+<!--Атрибуты HTML отвечают за обработку модели формы-->
+<!--Некоторые данные берутся из ViewBag-->
+<h3>Название анализа: @ViewBag.Analysis.AnalysisName</h3>
+<div class="row g-2">
+    <div class="col-auto"><h5>Пациент:</h5></div>
+    <div class="col-auto"><p>@ViewBag.User.Name @ViewBag.User.Surname</p></div>
+</div>
+<div class="row g-2">
+    <div class="col-auto"><h5>Дата Анализа:</h5></div>
+    <div class="col-auto"><p>@ViewBag.Analysis.Date</p></div>
+</div>
+<h5>Параметры анализа:</h5>
+<div class="row g-1">
+    <div class="col-auto">
+        <table class="table table-primary">
+            <tr>
+                <th>Параметр</th>
+                <th>Нормальное значение</th>
+                <th>Значение</th>
+            </tr>
+            <!--Перебираем все значения анализа и выводим их в таблице-->
+            @for (int i = 0; i < ViewBag.Analysis.ValuesOfAnalyzes.Count; i++)
+            {
+                <tr>
+                    <td>@ViewBag.Analysis.ValuesOfAnalyzes[i].TypesOfAnalysis.TypeName</td>
+                    @if(ViewBag.NormalValues[i].maxValue == 0 && ViewBag.NormalValues[i].minValue == 0)
+                    {
+                        <td class="text-center">Нет данных</td>
+                    }
+                    else
+                    {
+                        <td class="text-center">От @ViewBag.NormalValues[i].minValue До @ViewBag.NormalValues[i].maxValue</td>
+                    }
+                    <td class="text-center">@ViewBag.Analysis.ValuesOfAnalyzes[i].Value</td>
+                </tr>
+            }
+        </table>
+    </div>
+</div>
+<div class="row g-2">
+    <div class="col-auto"><h5>Диагноз:</h5></div>
+    <div class="col-auto"><p>@ViewBag.Analysis.Diagnosis</p></div>
+</div>
+<div class="row g-1">
+    <div class="col-auto"><a href="../Home" class="btn btn-primary">Назад</a></div>
+</div>

@@ -1,0 +1,235 @@
+﻿@model MedicalResultsProject.Models.Statistics
+
+@{
+    ViewBag.Title = "CheckStatistics";
+    //Создаем SelectedList чтобы заполнить DropDownList ниже
+    List<SelectListItem> listItems = new List<SelectListItem>();
+    //Ищем в БД типы анализов
+    MedicalResultsProject.Models.MyDbContext db = new MedicalResultsProject.Models.MyDbContext();
+    List<MedicalResultsProject.Models.DefaultAnalysis> defaultAnalysis = db.DefaultAnalyzes.Where(u=>u.isHidden==false).ToList();
+    //Добавляем в список типы анализов
+    foreach (var value in defaultAnalysis)
+    {
+        listItems.Add(new SelectListItem
+        {
+            Text = value.AnalysisName,
+            Value = value.Id.ToString()
+        });
+    }
+}
+
+<h2>Статистика</h2>
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        <table class="table table-primary">
+            <tr>
+                <td>
+                    <div class="form-group">
+                        <label>Начальная дата:</label>
+                        <div class="col-md-10">
+                            @Html.EditorFor(model => model.firstDate, new { htmlAttributes = new { @class = "form-control", @value = ViewBag.FirstDate } })
+                            @Html.ValidationMessageFor(model => model.firstDate, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="form-group">
+                        <label>Конечная дата:</label>
+                        <div class="col-md-10">
+                            @Html.EditorFor(model => model.secondDate, new { htmlAttributes = new { @class = "form-control", @value = ViewBag.SecondDate } })
+                            @Html.ValidationMessageFor(model => model.secondDate, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="form-group">
+                        <label>Анализ:</label>
+                        <div class="col-md-10">
+                            @Html.DropDownListFor(model => model.selectedAnalysis, listItems, new { @class = "btn btn-default dropdown-toggle bg-white" })
+                        </div>
+                    </div>
+                </td>
+                <td>
+                    <div class="form-group">
+                        <label></label>
+                        <div class="col-auto">
+                            <input type="button" value="Изменить" class="btn btn-primary" onClick='redirect();'>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        @if(@ViewBag.Parameters.Count == 0)
+        {
+            <h3>Анализов нет</h3>
+        }
+        <div id="chart_container">
+
+        </div>
+    </div>
+}
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    @Scripts.Render("~/Scripts/Chart.js")
+    <!--Скрипт на языке JavaScript для обработки изменения количества параметров-->
+<script>
+        //Метод для перенаправления на страницу с новыми параметрами
+        function redirect() {
+            var firstDate = document.getElementById("firstDate").value;
+            var secondDate = document.getElementById("secondDate").value;
+            var selectedAnalysis = document.getElementById("selectedAnalysis").value;
+            //Параметры передаются в ссылку
+            var url = 'https://localhost:44315/Home/CheckStatistics?firstDate=' + firstDate + '&secondDate=' + secondDate + "&selectedAnalysis=" + selectedAnalysis;
+            //Пользователь теперь переходит по ссылке
+            window.location = url;
+        }
+        //Метод деления без остатка
+        function div(val, by) {
+            return (val - val % by) / by;
+        }
+        //Получаем все параметры из ViewBag
+        var dates = @Html.Raw(Json.Encode(ViewBag.Dates));
+        var parameters = @Html.Raw(Json.Encode(ViewBag.Parameters));
+        var values = @Html.Raw(Json.Encode(ViewBag.Values));
+        var normalValues = @Html.Raw(Json.Encode(ViewBag.NormalValue));
+        //Определяем контейнер, где будут генерироваться графики
+        var container = document.querySelector("#chart_container");
+
+        //Перебираем параметры
+        for (let i = 0; i < parameters.length; i++) {
+            //Определяем максимальное и минимальное значение текущего параметра
+            var minNormals = [];
+            var maxNormals = [];
+            for (let k = 0; k < dates.length; k++) {
+                minNormals.push(normalValues[i][0]);
+                maxNormals.push(normalValues[i][1]);
+            }
+            //var normals = [];
+            //var sum = (normalValues[i][1]-normalValues[i][0]) / (dates.length-1);
+            //normals.push(normalValues[i][0]);
+            //for (let k = 1; k < dates.length; k++) {
+            //    normals.push(normals[k-1]+sum);
+            //}
+            //normals[dates.length - 1] = normalValues[i][1];
+
+            //Создаем новый html элемент для параметра
+            var chartElement = document.createElement('canvas');
+            chartElement.setAttribute("id", "lineChart"+i);
+            container.appendChild(chartElement);
+            var ctx = document.querySelector("#lineChart" + i).getContext('2d');
+            //labels хранит в себе даты анализа
+            const labels = dates;
+            //Если нормальные значения == 0, то не выводим их на графике
+            if (minNormals[0] === 0 && maxNormals[0] === 0) {
+                var data = {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: parameters[i],
+                            data: values[i],
+                            fill: false,
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.1
+                        }]
+                };
+            }
+            else {
+                //Определяем данные для графика
+                var data = {
+                    //Даты: ось Х
+                    labels: labels,
+                    //Датасет из значений параметра и нормальных значений
+                    datasets: [
+                        {
+                            label: parameters[i],
+                            data: values[i],
+                            fill: false,
+                            borderColor: 'rgb(75, 192, 192)',
+                            tension: 0.1
+                        },
+                        {
+                            label: "Минимальное значение",
+                            data: minNormals,
+                            fill: false,
+                            borderColor: 'rgb(348, 100, 100)',
+                            tension: 0.1
+                        },
+                        {
+                            label: "Максимальное значение",
+                            data: maxNormals,
+                            fill: false,
+                            borderColor: 'rgb(348, 100, 100)',
+                            tension: 0.1
+                        }]
+                };
+            }
+            //Определяем новый график для параметра
+            var barChart = new Chart(ctx, {
+                type: 'line',
+                data: data,
+                options: {
+                    scales: {
+                        yAxes: [{
+                            //Значения У начинаем всегда с 0
+                            ticks: {
+                                beginAtZero: true,
+                            }
+                        }]
+                    }
+                }
+            });
+        }
+
+        //check multipleChart
+        //var chartElement = document.createElement('canvas');
+        //chartElement.setAttribute("id", "lineChart");
+        //container.appendChild(chartElement);
+        //var ctx = document.querySelector("#lineChart").getContext('2d');
+
+        //const labels = dates;
+        //const data = {
+        //    labels: labels,
+        //    datasets: [{
+        //        label: parameters[0],
+        //        data: values[0],
+        //        fill: false,
+        //        borderColor: getRandomColor(),
+        //        tension: 0.1
+        //    }]
+        //};
+        //var lineChart = new Chart(ctx, {
+        //    type: 'line',
+        //    data: data,
+        //    options: {
+        //        responsive: true,
+        //        scales: {
+        //            yAxes: [{
+        //                ticks: {
+        //                    beginAtZero: true
+        //                }
+        //            }]
+        //        }
+        //    }
+        //});
+
+        //for (let i = 1; i < parameters.length; i++) {
+        //    const newDataset = {
+        //        label: parameters[i],
+        //        data: values[i],
+        //        fill: false,
+        //        borderColor: getRandomColor(),
+        //        tension: 0.1
+        //    };
+        //    lineChart.data.datasets.push(newDataset);
+        //    lineChart.update();
+        //}
+
+</script>
+}

@@ -1,0 +1,128 @@
+﻿@model MedicalResultsProject.Models.Analysis
+
+@{
+    ViewBag.Title = "AddAnalysis";
+    //Создаем SelectedList чтобы заполнить DropDownList ниже
+    List<SelectListItem> listItems = new List<SelectListItem>();
+    //Ищем в БД типы анализов
+    MedicalResultsProject.Models.MyDbContext db = new MedicalResultsProject.Models.MyDbContext();
+    MedicalResultsProject.Models.User user = db.Users.Where(u => u.Username == User.Identity.Name).FirstOrDefault();
+    List<MedicalResultsProject.Models.TypesOfAnalysis> typesOfAnalysis = db.TypesOfAnalyzes.AsEnumerable().TakeWhile(u => u.UserId == 0 || u.UserId == user.Id).ToList();
+    //Добавляем в список типы анализов
+    foreach (var value in typesOfAnalysis)
+    {
+        listItems.Add(new SelectListItem
+        {
+            Text = value.TypeName,
+            Value = value.Id.ToString()
+        });
+    }
+}
+
+<h2>Добавление нового анализа</h2>
+<!--Атрибуты HTML отвечают за обработку модели формы-->
+<!--Некоторые данные берутся из ViewBag-->
+
+
+@using (Html.BeginForm())
+{
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        <h4>Заполните информацию об анализе:</h4>
+        <hr />
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        <div class="form-group">
+            <label>Название анализа:</label>
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.AnalysisName, new { htmlAttributes = new { @class = "form-control", @value = ViewBag.AnalysisName } })
+                @Html.ValidationMessageFor(model => model.AnalysisName, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label>Дата анализа:</label>
+            <div class="col-md-10">
+                @Html.EditorFor(model => model.Date, new { htmlAttributes = new { @class = "form-control", @value = ViewBag.Date } })
+                @Html.ValidationMessageFor(model => model.Date, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <hr />
+        <label>Выберите количество параметров анализа:</label>
+        <div class="row g-2">
+            <div class="col-auto">
+                <input type="text" class="form-control" id="forTypes" value=@ViewBag.Status />
+            </div>
+            <div class="col-auto">
+                <input type="button" value="Изменить" class="btn btn-primary" onClick='redirect();'>
+            </div>
+        </div>
+        <!--Status отвечает за выбранное количество параметров анализа-->
+        @if (ViewBag.Status <= 0)
+        {
+            <label>Добавьте хотя бы 1 параметр анализа</label>
+        }
+        <!--Перебираем значения Status и выводим необходимое количество параметров анализа-->
+        @for (int i = 1; i <= ViewBag.Status; i++)
+        {
+            <div id="block">
+                <div class="form-group">
+                    <div class="row g-4 mt-1">
+                        <div class="col-auto">
+                            <label>Параметр @i:</label>
+                        </div>
+                        <div class="col-auto">
+                            @Html.EditorFor(model => model.ValuesOfAnalyzes[i - 1].Value, new { htmlAttributes = new { @class = "form-control" } })
+                            @Html.ValidationMessageFor(model => model.ValuesOfAnalyzes[i - 1].Value, "", new { @class = "text-danger" })
+                        </div>
+                        <div class="col-auto">@Html.DropDownListFor(model => model.ValuesOfAnalyzes[i - 1].TypeId, listItems, new { @class = "btn btn-default dropdown-toggle" })</div>
+                        <div class="col-auto"><a href="../Home/AddType" class="btn btn-primary">Добавить новый тип</a></div>
+                    </div>
+                </div>
+            </div>
+        }
+        <hr />
+        <div class="form-group mb-3">
+            <!--Если Status < 0 будут недоступны некоторые кнопки и значения для ввода -->
+            @if (ViewBag.Status > 0)
+            {
+                <label>Диагноз:</label>
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.Diagnosis, new { htmlAttributes = new { @class = "form-control", @value = ViewBag.Diagnosis } })
+                    @Html.ValidationMessageFor(model => model.Diagnosis, "", new { @class = "text-danger" })
+                </div>
+            }
+        </div>
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <div class="row g-2">
+                    <div class="col-auto">
+                        @if (ViewBag.Status > 0)
+                        {
+                            <input type="submit" value="Сохранить" class="btn btn-primary" />
+                        }
+                    </div>
+                    <div class="col-auto">
+                        <a href="../Home" class="btn btn-danger">Отмена</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+    <!--Скрипт на языке JavaScript для обработки изменения количества параметров-->
+    <script>
+        function redirect() {
+            //Параметры берутся из текстовых полей по id
+            var count = document.getElementById("forTypes").value;
+            var name = document.getElementById("AnalysisName").value;
+            var date = document.getElementById("Date").value;
+            //Параметры передаются в ссылку
+            var url = 'https://localhost:44315/Home/AddAnalysis?status=' + count + '&analysisName=' + name + '&date=' + date;
+            //Пользователь теперь переходит по ссылке
+            window.location = url;
+        }
+    </script>
+}
